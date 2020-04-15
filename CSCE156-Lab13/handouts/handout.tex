@@ -1,0 +1,259 @@
+\documentclass[12pt]{scrartcl}
+
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{.25cm}
+
+\usepackage{graphicx}
+
+\usepackage{xcolor}
+
+\definecolor{darkred}{rgb}{0.5,0,0}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\usepackage{hyperref}
+\hypersetup{
+  letterpaper,
+  colorlinks,
+  linkcolor=red,
+  citecolor=darkgreen,
+  menucolor=darkred,
+  urlcolor=blue,
+  pdfpagemode=none,
+  pdftitle={CSCE 156 Lab Handout},
+  pdfauthor={Christopher M. Bourke},
+  pdfsubject={},
+  pdfkeywords={}
+}
+
+\definecolor{MyDarkBlue}{rgb}{0,0.08,0.45}
+\definecolor{MyDarkRed}{rgb}{0.45,0.08,0}
+\definecolor{MyDarkGreen}{rgb}{0.08,0.45,0.08}
+
+\definecolor{mintedBackground}{rgb}{0.95,0.95,0.95}
+\definecolor{mintedInlineBackground}{rgb}{.90,.90,1}
+
+%\usepackage{newfloat}
+\usepackage[newfloat=true]{minted}
+\setminted{mathescape,
+               linenos,
+               autogobble,
+               frame=none,
+               framesep=2mm,
+               framerule=0.4pt,
+               %label=foo,
+               xleftmargin=2em,
+               xrightmargin=0em,
+               startinline=true,  %PHP only, allow it to omit the PHP Tags *** with this option, variables using dollar sign in comments are treated as latex math
+               numbersep=10pt, %gap between line numbers and start of line
+               style=default, %syntax highlighting style, default is "default"
+               			    %gallery: http://help.farbox.com/pygments.html
+			    	    %list available: pygmentize -L styles
+               bgcolor=mintedBackground} %prevents breaking across pages
+               
+\setmintedinline{bgcolor={mintedBackground}}
+\setminted[text]{bgcolor={mintedBackground},linenos=false,autogobble,xleftmargin=1em}
+%\setminted[php]{bgcolor=mintedBackgroundPHP} %startinline=True}
+\SetupFloatingEnvironment{listing}{name=Code Sample}
+\SetupFloatingEnvironment{listing}{listname=List of Code Samples}
+
+
+\title{CSCE 156 -- Computer Science II}
+\subtitle{Lab 13.0 - Sorting}
+\author{~}
+\date{~}
+
+\begin{document}
+
+\maketitle
+
+\section*{Prior to Lab}
+
+\begin{enumerate}
+  \item Review this laboratory handout prior to lab.
+  \item Review insertion sort and quick sort from the class 
+  	notes or from the following resources:
+	\begin{itemize}
+	  \item \url{http://en.wikipedia.org/wiki/Insertion_sort}
+	  \item \url{http://en.wikipedia.org/wiki/Quick_sort}
+	\end{itemize}
+  \item Familiarize yourself with sorting algorithms using the
+  	following site: \url{http://www.sorting-algorithms.com/}
+\end{enumerate}
+
+\section*{Lab Objectives \& Topics}
+Following the lab, you should be able to:
+\begin{itemize}
+  \item Sort a list of objects by using the 
+    \mintinline{java}{Comparable<T>} interface and various sorting 
+    methods including the \mintinline{java}{Collections.sort()} 
+    method.
+  \item Be familiar with Insertion Sort and Quick Sort algorithms 
+    and be able to adapt them to sort comparable objects.
+  \item Compare and contrast the performance of various sorting methods
+  \item Empirically measure the relative performance of algorithms 
+    with respect to the input size. 
+\end{itemize}
+
+\section*{Peer Programming Pair-Up}
+
+To encourage collaboration and a team environment, labs will be
+structured in a \emph{pair programming} setup.  At the start of
+each lab, you will be randomly paired up with another student 
+(conflicts such as absences will be dealt with by the lab instructor).
+One of you will be designated the \emph{driver} and the other
+the \emph{navigator}.  
+
+The navigator will be responsible for reading the instructions and
+telling the driver what to do next.  The driver will be in charge of the
+keyboard and workstation.  Both driver and navigator are responsible
+for suggesting fixes and solutions together.  Neither the navigator
+nor the driver is ``in charge.''  Beyond your immediate pairing, you
+are encouraged to help and interact and with other pairs in the lab.
+
+Each week you should alternate: if you were a driver last week, 
+be a navigator next, etc.  Resolve any issues (you were both drivers
+last week) within your pair.  Ask the lab instructor to resolve issues
+only when you cannot come to a consensus.  
+
+Because of the peer programming setup of labs, it is absolutely 
+essential that you complete any pre-lab activities and familiarize
+yourself with the handouts prior to coming to lab.  Failure to do
+so will negatively impact your ability to collaborate and work with 
+others which may mean that you will not be able to complete the
+lab.  
+
+\section*{Sorting}
+
+Being able to organize and retrieve information in large datasets is 
+a big research area with numerous applications.  At the heart of any 
+data mining endeavor is the fundamental operation of sorting.
+
+For this lab, we have provided a file containing United States 
+geographical data (specifically, a comprehensive list of 80264 
+geographical locations identified by 5-digit zip code, city, state 
+and latitude/longitude).  Functionality has already been provided 
+for processing this data file and creating an array of 
+\mintinline{java}{Location} objects to hold this data.  Each time you 
+run the \mintinline{java}{main()} method in the 
+\mintinline{java}{SortingPerformance} class, a random selection of 
+locations is loaded.  The parameter, \mintinline{java}{n} limits the 
+number of locations loaded from the file so that you'll be able to 
+easily run experiments on different input sizes.
+
+It will be your task to determine how this geographical data should 
+be sorted, develop several sorting algorithms to actually sort the 
+data, and empirically evaluate the running time of each method.
+
+\subsection*{Comparable Interface}
+
+Numerical and string data types have a natural ordering that is 
+understood by a computer language.  However, user defined types 
+such as the \mintinline{java}{Location} objects do not have an 
+obvious ordering; it may be possible to order locations by an 
+individual field (zip code, state, city) or a combination of those 
+fields.  Java provides a means for you to define exactly how 
+instances of your class should be ordered by implementing the 
+\mintinline{java}{Comparable<T>} interface.
+
+If a class implements the \mintinline{java}{Comparable<T>} interface, 
+it must provide an implementation for the following method.
+
+\mintinline{java}{public int compareTo(T item)}
+
+The general contract of this method is as follows:
+\begin{itemize}
+  \item It returns a negative number if this object should precede 
+    the item object
+  \item It returns zero if this object is ``equivalent'' to the 
+    item object
+  \item It returns a positive number if this object should come 
+    after the item object
+\end{itemize}
+    
+\subsection*{Sorting Algorithms}
+    
+You will be comparing four different sorting algorithms: selection 
+sort, insertion sort, quick sort, and the sorting method provided by 
+the JDK (Java Developer's Kit, specifically the 
+\mintinline{java}{Arrays.sort(Object[])} method).  The selection sort 
+algorithm and the method to call the JDK's sorting algorithm have 
+already been provided for you in the SortingAlgorithms class.  Refer 
+to the selection sort method especially if you are still unclear on 
+how to use the \mintinline{java}{compareTo()} method.  You will need 
+to adapt the insertion sort and quick sort algorithms from your text 
+to sort \mintinline{java}{Location} objects in the given array.  Be 
+sure to sort and return a copy of the array, not the array itself.
+
+\subsection*{Comparing Running Times}
+
+To compare how each sorting algorithm performs, you will setup an 
+experiment and calculate how much time it actually takes to sort the 
+array of locations by using the \mintinline{java}{System.nanoTime()} 
+method.  This method returns the current system time, more-or-less 
+precise to a nanosecond (1 second = 1,000 milliseconds = 1,000,000 
+microseconds = 1,000,000,000 nanoseconds).  By taking a snapshot of 
+the system time before and after a method call, you can compute 
+(roughly) the total elapsed time.  As an example, consider the 
+following code snippet.
+
+\begin{minted}{java}
+long start = System.nanoTime();
+Location sorted[] = SortingAlgorithms.insertionSort(sp.getLocations());
+long end = System.nanoTime();
+long elapsedTimeNs = (end - start);
+\end{minted}
+
+\section*{Activities}
+
+Clone the starter code for this lab from GitHub using the following
+url: \url{https://github.com/cbourke/CSCE156-Lab13}.
+
+\begin{enumerate}
+  \item Implement the \mintinline{java}{compareTo()} method in the 
+    \mintinline{java}{Location} class.  You may use whatever criteria
+    you wish (city/state or latitude/longitude etc.).
+  \item Implement the \mintinline{java}{insertionSort()} and 
+    \mintinline{java}{quickSortRecursive()} methods in the 
+    \mintinline{java}{SortingAlgorithms} class.  Do this by adapting 
+    the algorithms as presented in your text book or other
+    resource (algorithms are also available in our
+    \href{https://bitbucket.org/chrisbourke/computersciencei/raw/44fb9b39be3221dc02c1b5d0712f9b9f03260e46/ComputerScienceOne.pdf}{CS1 textbook}.
+  \item Debug your code and verify that each sorting algorithm is 
+    correctly sorting by using the \mintinline{java}{printLocationArray()} 
+    method provided to you to output the array contents. 
+  \item Perform several timed experimental runs of each of your 
+    algorithms on various array sizes as outlined in the worksheet
+\end{enumerate}
+
+
+\section*{Submission}
+
+We have included a test suite of unit tests written in JUnit 
+(\url{https://junit.org/junit5/}) a popular unit testing framework for
+Java.  Even though the test driver (in the \mintinline{text}{src/test}
+source folder) has no main method, you can still run it in Eclipse and
+get a report on how many of the tests passed, failed or resulted in 
+an unexpected exception.  Be sure all of the unit tests pass before
+submitting your source files through webhandin.  You can rerun this
+test suite in the webgrader to ensure everything works.  
+
+\subsection*{Advanced Activities (Optional)}
+
+\begin{enumerate}
+  \item Examine the experimental data for each of the sorting algorithms 
+    on the various input sizes.  Under the assumption that we have 1 
+    million records, make a prediction, based on the observed running 
+    times on how long each algorithm would take to execute.  Find a (or 
+    generate a fake) fake dataset of 1 million entries and run your 
+    experiment.  Do your predictions match the actual running time?
+  \item Implementing the \mintinline{java}{Comparable} interface means 
+    that \mintinline{java}{Location} objects can only be ``naturally 
+    ordered'' in one way.  It is often more flexible to instead use 
+    \mintinline{java}{Comparator} class to enable a user to order objects 
+    in any order that they want while reusing your methods.  Rewrite 
+    each of the sorting methods to instead use a 
+    \mintinline{java}{Comparator<Location>} instance passed in to the 
+    method. 
+\end{enumerate}
+
+\end{document}
